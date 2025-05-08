@@ -96,7 +96,7 @@ async function detectPotentialDuplicatesOptimized(items, threshold, weights) {
         for (let j = i + 1; j < creatorsList.length; j++) {
             const { item: item2, creator: creator2 } = creatorsList[j];
             const similarity = calculateCombinedSimilarity(creator1, creator2, weights);
-            if (similarity > threshold) {
+            if (similarity > threshold && similarity < 1.0) {
                 potentialDuplicates.push({ item1, creator1, item2, creator2, similarity });
                 console.log(`Potential similar names found:\nItem 1: ${creator1.fullName}\nItem 2: ${creator2.fullName}\nSimilarity: ${similarity}`);
             }
@@ -168,13 +168,13 @@ async function handleDetectedDuplicates(duplicates) {
         const sanitizedAction = action ? action.trim().toLowerCase() : null;
 
         if (sanitizedAction === '1') {
-            const newName = prompt(`Enter the new name to replace all similar names. The first part will be the first name, and the last part will be the last name:`, "");
-            if (newName) {
-                const nameParts = newName.trim().split(/\s+/);
-                const firstName = nameParts.slice(0, -1).join(' ');
-                const lastName = nameParts.slice(-1).join(' ');
+            for (const pair of duplicatePairs) {
+                const newName = prompt(`Enter the new name for this pair:` + pair.creator1.fullName + `, ` + pair.creator2.fullName, "");
+                if (newName) {
+                    const nameParts = newName.trim().split(/\s+/);
+                    const firstName = nameParts.slice(0, -1).join(' ');
+                    const lastName = nameParts.slice(-1).join(' ');
 
-                for (const pair of duplicatePairs) {
                     await updateCreatorNames(pair.item1, pair.creator1, firstName, lastName);
                     await updateCreatorNames(pair.item2, pair.creator2, firstName, lastName);
                 }
